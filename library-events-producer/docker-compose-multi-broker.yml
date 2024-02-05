@@ -68,3 +68,30 @@ services:
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
     depends_on:
       - zoo1
+
+  mongo-event-store:
+    image: mongo
+    container_name: mongo-event-store
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - ./init/initDatabase.js:/docker-entrypoint-initdb.d/initDatabase.js:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: library-events
+  mongo-express:
+    image: mongo-express
+    container_name: express
+    depends_on:
+      - mongo-event-store
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+      ME_CONFIG_MONGODB_URL: mongodb://root:root@mongo-event-store:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: user
+      ME_CONFIG_BASICAUTH_PASSWORD: password
