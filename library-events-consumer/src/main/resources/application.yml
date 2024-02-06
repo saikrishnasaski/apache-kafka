@@ -21,7 +21,10 @@ spring:
       password: qwerty
 
 app:
-  libraryEventsTopicName: library-events
+  topics:
+    library-events: library-events
+    retry: library-events.RETRY
+    dlt: library-events.DLT
 
 server:
   port: 8091

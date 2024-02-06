@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
@@ -20,11 +21,23 @@ public class LibraryEventService {
     private final ObjectMapper objectMapper;
     private final SequenceGeneratorService sequenceGeneratorService;
 
-    public void persistEvent(ConsumerRecord<Integer, String> consumerRecord) throws IOException {
+    public void persistEvent(ConsumerRecord<Integer, String> consumerRecord) {
 
         var eventPayload = consumerRecord.value();
+        EventPayload libraryEventPayload;
 
-        var libraryEventPayload = objectMapper.readValue(eventPayload.getBytes(), EventPayload.class);
+        try {
+
+            libraryEventPayload = objectMapper.readValue(eventPayload.getBytes(), EventPayload.class);
+        } catch (IOException ex) {
+
+            throw new IllegalArgumentException("Invalid Eventpayload");
+        }
+
+        if (libraryEventPayload.eventId != null && libraryEventPayload.eventId == 999) {
+
+            throw new RecoverableDataAccessException("EventId is " + libraryEventPayload.eventId);
+        }
 
         if (EventType.UPDATE == libraryEventPayload.eventType) {
 

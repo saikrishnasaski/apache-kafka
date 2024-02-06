@@ -7,19 +7,19 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class EventListener {
+public class RetryEventListener {
 
     private final LibraryEventService eventService;
 
-    @KafkaListener(topics = {"library-events"})
+    @KafkaListener(topics = {"${app.topics.retry}"},
+    autoStartup = "${retry-listener.autostart:true}",
+            groupId = "retry-event-listener")
     public void onMessage(ConsumerRecord<Integer, String> consumerRecord) {
 
-        log.info("Received Message: {}", consumerRecord);
+        log.info("Retrying Failed Message: {}", consumerRecord);
 
         eventService.persistEvent(consumerRecord);
     }
